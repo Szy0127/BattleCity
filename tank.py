@@ -12,12 +12,13 @@ class Bullet(pygame.sprite.Sprite):
     #生命值(飞行时间)
     LIFE = 25
 
-    def __init__(self, player):
+    def __init__(self, player,kill = False):
         pygame.sprite.Sprite.__init__(self)
 
         #是否为强化版子弹 设置不同属性
         self.strong = player.strongBullet
-
+        #一击必杀
+        self.kill = kill
         if self.strong:
             self.WIDTH, self.HEIGHT = 128, 128
             path = 'image/strongBullet' + str(player.id)
@@ -67,8 +68,13 @@ class Bullet(pygame.sprite.Sprite):
                                        False, pygame.sprite.collide_mask):
             self.life = 0
             #非无敌状态时敌方扣血
-            if enemy.life and enemy.invincible == 0:
+            if enemy.life and enemy.invincible == 0 and enemy.defend == 0:
                 enemy.life -= 1
+                if self.strong :
+                    enemy.life -= 1
+                if self.kill:
+                    enemy.life = 0
+
 
         # 检测是否击中墙 (强化子弹可穿透墙)
         if self.strong:
@@ -133,7 +139,7 @@ class Tank(pygame.sprite.Sprite):
     WIDTH, HEIGHT = 60, 60
     # 生命值
     LIFE = 5
-    # 无敌时间
+    # 无敌时间 这里的无敌是指坦克在被击杀后在出生点复活 为了避免两个坦克重叠的问题 此时会无视碰撞体积
     INVINCIBLE = 50
     #强化子弹时间
     STRONGBULLET = 250
@@ -142,13 +148,28 @@ class Tank(pygame.sprite.Sprite):
     #正常速度
     SPEED = 5
 
+    SKILL_AMOUNT = 3
+
+    SKILL_HIDE = 0 # 隐身
+    SKILL_DEFEND = 1 # 这里也是无敌 但是有碰撞体积
+    SKILL_KILL = 2 # 下发子弹一击必杀
+    #单次隐身时间
+    HIDE = 150
+    #单次无敌时间
+    DEFEND = 50
+
     def __init__(self, bgSize, face, location, number):
         pygame.sprite.Sprite.__init__(self)
 
         #玩家编号
         self.id = number
-        
+        self.hide = 0
+
+
+        #
+        self.skill = [3 for i in range(self.SKILL_AMOUNT)]
         path = 'image/tank' + str(number)
+        self.bullet_kill = False
         self.image = []
         self.image.append(pygame.image.load(str(path + 'Left.png')).convert_alpha())
         self.image.append(pygame.image.load(str(path + 'Right.png')).convert_alpha())
@@ -167,6 +188,7 @@ class Tank(pygame.sprite.Sprite):
 
         #无敌时间
         self.invincible = Tank.INVINCIBLE
+        self.defend = 0
         #强化子弹时间
         self.strongBullet = 0
 
@@ -186,7 +208,7 @@ class Tank(pygame.sprite.Sprite):
         # 坦克所带子弹
         self.bullets = []
         # 可携带子弹总数量
-        self.bulletNumber = 3
+        self.bulletNumber = 2
 
         # 玩家是否胜利
         self.win = False
@@ -249,6 +271,9 @@ class Tank(pygame.sprite.Sprite):
         self.invincible = Tank.INVINCIBLE
         #关闭子弹强化
         self.strongBullet = 0
+        self.bullet_kill = False
+        self.hide = 0
+
 
         #初始化方向
         if self.id == 1:

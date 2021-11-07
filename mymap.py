@@ -4,6 +4,7 @@ import pygame
 class Target(pygame.sprite.Sprite):
     WIDTH, HEIGHT = 45, 60
     LIFE = 8
+    NEW_LIFE = 5
     def __init__(self, location, choice):
         pygame.sprite.Sprite.__init__(self)
 
@@ -18,6 +19,8 @@ class Target(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
         self.life = Target.LIFE
+
+        self.life_left = self.NEW_LIFE
 
         #此属性用于死亡动画播放
         self.active = True
